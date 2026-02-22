@@ -1,0 +1,19 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Local DB
+chroma_payments_db/
+
+# Logs
+*.log
+
+# Sensitive / proprietary
+rules/xsd/
+*.xml
+*.json
+
+# OS
+.DS_Store
+Thumbs.db

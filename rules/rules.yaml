@@ -1,0 +1,60 @@
+# rules/rules.yaml
+
+mt103:
+  mandatory_fields:
+    - "20"
+    - "23B"
+    - "32A"
+    - "50K"
+    - "59"
+    - "71A"
+  rules:
+    - id: "MT103_32A_FORMAT"
+      desc: "32A should look like YYMMDDCCYAmount (e.g., 260204USD12345,67)"
+      type: "regex_field"
+      field: "32A"
+      pattern: "^[0-9]{6}[A-Z]{3}[0-9]+([,\\.][0-9]+)?$"
+
+    - id: "MT103_71A_ALLOWED"
+      desc: "71A should be OUR, SHA, or BEN"
+      type: "in_set"
+      field: "71A"
+      allowed: ["OUR", "SHA", "BEN"]
+
+    - id: "MT103_UETR_UUID"
+      desc: "If present, 121 should be a UUID format"
+      type: "regex_optional"
+      field: "121"
+      pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+
+pacs008:
+  mandatory_fields:
+    - "MsgId"
+    - "CreDtTm"
+    - "InstrId"
+    - "EndToEndId"
+    - "IntrBkSttlmAmt"
+    - "Ccy"
+    - "DbtrNm"
+    - "CdtrNm"
+    - "ChrgBr"
+    - "UETR"
+  rules:
+    - id: "PACS008_CHRGBR_ALLOWED"
+      desc: "ChrgBr should be DEBT, CRED, SHAR or SLEV (typical ISO values)"
+      type: "in_set"
+      field: "ChrgBr"
+      allowed: ["DEBT", "CRED", "SHAR", "SLEV"]
+
+    - id: "PACS008_UETR_UUID"
+      desc: "UETR should be a UUID format"
+      type: "regex_field"
+      field: "UETR"
+      pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+
+    - id: "PACS008_AMOUNT_NUMERIC"
+      desc: "IntrBkSttlmAmt should be numeric"
+      type: "regex_field"
+      field: "IntrBkSttlmAmt"
+      pattern: "^[0-9]+([\\.][0-9]+)?$"
+ 

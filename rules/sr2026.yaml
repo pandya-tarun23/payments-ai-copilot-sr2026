@@ -1,0 +1,27 @@
+# rules/sr2026.yaml
+# SR2026 overlays: extra checks + guidance. Keep it lightweight & extendable.
+
+overlays:
+  pacs008:
+    # SR2026 theme: reduce unstructured address usage and enforce minimum structured parts.
+    # We'll implement as "heuristics" because your parser currently extracts names, not full address blocks.
+    rules:
+      - id: "SR2026_ADDR_NO_FREEFORM_ONLY"
+        desc: "SR2026: avoid fully unstructured postal address; prefer structured/hybrid with at least Town + Country"
+        type: "guidance"
+        severity: "WARN"
+        message: "If you currently send only free-form postal address lines, update to structured/hybrid address. Minimum: structured Town Name + Country."
+
+      - id: "SR2026_CHRGBR_RECHECK"
+        desc: "SR2026: ensure ChargeBearer follows CBPR+ allowed values"
+        type: "in_set"
+        field: "ChrgBr"
+        allowed: ["DEBT", "CRED", "SHAR", "SLEV"]
+
+  mt103:
+    rules:
+      - id: "SR2026_MT_CONTINGENCY_NOTE"
+        desc: "SR2026: MT usage increasingly limited; ensure MX readiness"
+        type: "guidance"
+        severity: "WARN"
+        message: "Confirm MT103 usage is only per allowed scenario (e.g., contingency or specific exceptions). Ensure pacs.008/pacs.009 capability and end-to-end testing."
