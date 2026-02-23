@@ -26,7 +26,7 @@ mode = st.radio(
     [
         "Autopilot (Recommended)",
         "Validate",
-        "pacs.008 SR2026 Assessment",
+        "SR2026 Assessment",
         "XSD Validation",
         "Failure Analysis + AI Suggestions"
     ],
