@@ -19,6 +19,22 @@ def parse_mt103(text):
 
 from lxml import etree
 
+def _extract_postal_address(root, party):
+    """
+    Extract PstlAdr sub-fields (TwnNm, Ctry, AdrLine) for a party ('Dbtr' or 'Cdtr').
+    Used for SR2026 address classification (structured vs hybrid vs unstructured).
+    """
+    base = f"//*[local-name()='{party}']/*[local-name()='PstlAdr']"
+    twn = root.xpath(f"{base}/*[local-name()='TwnNm']/text()")
+    ctry = root.xpath(f"{base}/*[local-name()='Ctry']/text()")
+    adr_lines = root.xpath(f"{base}/*[local-name()='AdrLine']/text()")
+
+    return {
+        "TwnNm": twn[0].strip() if twn else "",
+        "Ctry": ctry[0].strip().upper() if ctry else "",
+        "AdrLine": [a.strip() for a in adr_lines if a and a.strip()],
+    }
+
 def parse_pacs008(xml_text):
     root = etree.fromstring(xml_text.encode())
 
@@ -56,13 +72,23 @@ def parse_pacs008(xml_text):
     except Exception:
         pass
 
-    return {"msg_type": "pacs.008", "fields": fields, "checks": []}
+    addresses = {
+        "debtor": _extract_postal_address(root, "Dbtr"),
+        "creditor": _extract_postal_address(root, "Cdtr"),
+    }
+
+    return {"msg_type": "pacs.008", "fields": fields, "checks": [], "addresses": addresses}
 
 def detect_and_parse(text):
-    if "<" in text and "pacs.008" in text:
-        return parse_pacs008(text)
+    t = text or ""
+    low = t.lower()
 
-    if ":20:" in text and ":32A:" in text:
-        return parse_mt103(text)
+    # Detect by root element local-name (namespace-agnostic), not just a
+    # "pacs.008" substring — mirrors the heuristic already used in autopilot.py.
+    if "<" in t and ("fitoficstmrcdttrf" in low or "pacs.008" in low):
+        return parse_pacs008(t)
+
+    if ":20:" in t and ":32A:" in t:
+        return parse_mt103(t)
 
     return {"msg_type": "unknown", "fields": {}, "checks": ["Unknown format"]}

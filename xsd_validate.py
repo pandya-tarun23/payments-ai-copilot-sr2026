@@ -1,6 +1,19 @@
+import os
 from pathlib import Path
 from typing import List, Tuple, Optional
 from lxml import etree
+
+
+# SWIFT's CBPR+ XSDs are licensed and must not be committed to this (public)
+# repo — rules/xsd/ is gitignored. Set SR2026_XSD_PATH to point at your own
+# copy, or drop it at DEFAULT_XSD_PATH. See README.md for details.
+DEFAULT_XSD_PATH = Path(__file__).resolve().parent / "rules" / "xsd" / "sr2026_pacs008" / \
+    "CBPRPlus_SR2026_(Combined)_CBPRPlus-pacs_008_001_08_FIToFICustomerCreditTransfer_20260209_0820_iso15enriched.xsd"
+
+
+def get_xsd_path() -> Path:
+    env_path = os.environ.get("SR2026_XSD_PATH")
+    return Path(env_path) if env_path else DEFAULT_XSD_PATH
 
 
 class LocalResolver(etree.Resolver):
@@ -62,11 +75,7 @@ if __name__ == "__main__":
         lines.append(line)
     xml_text = "\n".join(lines).strip()
 
-    # Update this to your actual XSD filename:
-    xsd_path = Path(__file__).resolve().parent / "rules" / "xsd" / "sr2026_pacs008" / \
-        "CBPRPlus_SR2026_(Combined)_CBPRPlus-pacs_008_001_08_FIToFICustomerCreditTransfer_20260209_0820_iso15enriched.xsd"
-
-    valid, errs = validate_xml_against_xsd(xml_text, xsd_path)
+    valid, errs = validate_xml_against_xsd(xml_text, get_xsd_path())
     if valid:
         print("✅ XSD VALID")
     else:

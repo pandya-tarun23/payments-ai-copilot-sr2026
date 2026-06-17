@@ -4,11 +4,8 @@ from glob import glob
 
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-#from langchain_community.vectorstores import Chroma
-#from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings, OllamaLLM
+from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
-#from langchain_ollama import Chroma
 
 KB_DIR = "payments_kb"
 DB_DIR = "chroma_payments_db"
@@ -35,12 +32,11 @@ def main():
     chunks = splitter.split_documents(docs)
 
     embeddings = OllamaEmbeddings(model="nomic-embed-text")
-    vectordb = Chroma.from_documents(
+    Chroma.from_documents(
         documents=chunks,
         embedding=embeddings,
         persist_directory=DB_DIR
     )
-    vectordb.persist()
     print(f"Indexed {len(chunks)} chunks into {DB_DIR}")
 
 if __name__ == "__main__":

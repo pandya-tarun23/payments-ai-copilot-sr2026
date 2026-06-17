@@ -7,9 +7,7 @@ from langchain_ollama import OllamaEmbeddings, OllamaLLM
 # Your modules
 from validate import validate_message, pretty_defects
 from sr2026 import sr2026_assess, sr2026_pretty
-from xsd_validate import validate_xml_against_xsd
-
-from failure_analyzer import analyze_failure, pretty_failure
+from xsd_validate import validate_xml_against_xsd, get_xsd_path
 
 from failure_analyzer import analyze_failure, pretty_failure, ai_suggestion
 
@@ -19,8 +17,7 @@ from autopilot import run_autopilot
 BASE_DIR = Path(__file__).resolve().parent
 DB_DIR = str(BASE_DIR / "chroma_payments_db")
 
-XSD_PACS008_PATH = BASE_DIR / "rules" / "xsd" / "sr2026_pacs008" / \
-    "CBPRPlus_SR2026_(Combined)_CBPRPlus-pacs_008_001_08_FIToFICustomerCreditTransfer_20260209_0820_iso15enriched.xsd"
+XSD_PACS008_PATH = get_xsd_path()
 
 
 def read_multiline_until_end() -> str:
@@ -71,9 +68,13 @@ def main():
             msg = q[len("failure_analysis:"):].strip()
             rep = analyze_failure(msg)
             print("\n" + pretty_failure(rep))
+
+            suggestion = ai_suggestion(llm, rep)
+            print("\n=== AI Suggested Actions ===\n")
+            print(suggestion)
+
             continue
-            
-    
+
         # ---- VALIDATE MODE ----
         if q.lower().startswith("validate:"):
             msg = q[len("validate:"):].strip()
@@ -91,6 +92,14 @@ def main():
         # ---- XSD MODE ----
         if q.lower().startswith("xsd_validate:"):
             xml_msg = q[len("xsd_validate:"):].strip()
+
+            if not XSD_PACS008_PATH.exists():
+                print(
+                    f"\nNo XSD schema found at {XSD_PACS008_PATH}. "
+                    "Set the SR2026_XSD_PATH env var or place your own CBPR+ schema there (see README.md)."
+                )
+                continue
+
             ok, errs = validate_xml_against_xsd(xml_msg, XSD_PACS008_PATH)
 
             if ok:
@@ -101,19 +110,6 @@ def main():
                     print("-", e)
                 if len(errs) > 30:
                     print(f"... and {len(errs) - 30} more")
-            continue
-            
-        if q.lower().startswith("failure_analysis:"):
-            msg = q[len("failure_analysis:"):].strip()
-            rep = analyze_failure(msg)
-
-            print("\n" + pretty_failure(rep))
-
-            # 🔥 AI suggestion
-            suggestion = ai_suggestion(llm, rep)
-            print("\n=== AI Suggested Actions ===\n")
-            print(suggestion)
-
             continue
 
         # ---- NORMAL RAG MODE ----

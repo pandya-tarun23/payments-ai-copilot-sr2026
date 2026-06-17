@@ -3,7 +3,7 @@ from pathlib import Path
 
 from validate import validate_message, pretty_defects
 from sr2026 import sr2026_assess, sr2026_pretty
-from xsd_validate import validate_xml_against_xsd
+from xsd_validate import validate_xml_against_xsd, get_xsd_path
 from failure_analyzer import analyze_failure, pretty_failure, ai_suggestion
 
 from langchain_ollama import OllamaLLM
@@ -14,8 +14,7 @@ from autopilot import run_autopilot
 llm = OllamaLLM(model="llama3.1:8b", temperature=0.2)
 
 BASE_DIR = Path(__file__).resolve().parent
-XSD_PATH = BASE_DIR / "rules" / "xsd" / "sr2026_pacs008" / \
-    "CBPRPlus_SR2026_(Combined)_CBPRPlus-pacs_008_001_08_FIToFICustomerCreditTransfer_20260209_0820_iso15enriched.xsd"
+XSD_PATH = get_xsd_path()
 
 
 st.set_page_config(page_title="Payments AI Copilot", layout="wide")
@@ -64,12 +63,18 @@ if st.button("Run", type="primary"):
 
     # ---- XSD ----
     elif mode == "XSD Validation":
-        ok, errs = validate_xml_against_xsd(text, XSD_PATH)
-        if ok:
-            st.success("✅ XSD VALID")
+        if not XSD_PATH.exists():
+            st.warning(
+                f"No XSD schema found at {XSD_PATH}. "
+                "Set the SR2026_XSD_PATH env var or place your own CBPR+ schema there (see README.md)."
+            )
         else:
-            st.error("❌ XSD INVALID")
-            st.code("\n".join(errs[:50]), language="text")
+            ok, errs = validate_xml_against_xsd(text, XSD_PATH)
+            if ok:
+                st.success("✅ XSD VALID")
+            else:
+                st.error("❌ XSD INVALID")
+                st.code("\n".join(errs[:50]), language="text")
 
     # ---- FAILURE + AI ----
     else:
@@ -80,13 +85,5 @@ if st.button("Run", type="primary"):
 
         st.subheader("AI Suggested Actions")
         suggestion = ai_suggestion(llm, rep)
-        llm.invoke("Hello")
         st.markdown(suggestion)
-        
- #      tab1, tab2, tab3, tab4 = st.tabs([
- #  "Validate",
- #  "SR2026",
- #  "XSD",
- #  "Failure Copilot"
-#])
 

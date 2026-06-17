@@ -66,11 +66,18 @@ def run_autopilot(
     # pacs.008: run XSD + SR2026 + base rules (+ optional AI suggestions using failure analyzer on text)
     if kind == "pacs008_xml":
         if xsd_path is not None:
-            ok, errs = validate_xml_against_xsd(text, xsd_path)
-            if ok:
-                out["sections"].append(("XSD", "✅ XSD VALID (SR2026 pacs.008)"))
+            if not Path(xsd_path).exists():
+                out["sections"].append((
+                    "XSD",
+                    f"No XSD schema found at {xsd_path}. "
+                    "Set the SR2026_XSD_PATH env var or place your own CBPR+ schema there (see README.md).",
+                ))
             else:
-                out["sections"].append(("XSD", "❌ XSD INVALID (SR2026 pacs.008)\n" + "\n".join(errs[:50])))
+                ok, errs = validate_xml_against_xsd(text, xsd_path)
+                if ok:
+                    out["sections"].append(("XSD", "✅ XSD VALID (SR2026 pacs.008)"))
+                else:
+                    out["sections"].append(("XSD", "❌ XSD INVALID (SR2026 pacs.008)\n" + "\n".join(errs[:50])))
 
         # SR2026 overlays (your rules)
         sr = sr2026_assess(text)

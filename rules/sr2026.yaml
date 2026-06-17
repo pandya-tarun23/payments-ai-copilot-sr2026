@@ -3,15 +3,11 @@
 
 overlays:
   pacs008:
-    # SR2026 theme: reduce unstructured address usage and enforce minimum structured parts.
-    # We'll implement as "heuristics" because your parser currently extracts names, not full address blocks.
+    # SR2026 address compliance (unstructured vs minimum-gate vs hybrid-overflow
+    # vs compliant) is classified directly from the extracted PstlAdr block by
+    # _check_sr2026_address() in sr2026.py — it needs TwnNm/Ctry/AdrLine
+    # structure, not a single field, so it isn't expressible as a YAML rule.
     rules:
-      - id: "SR2026_ADDR_NO_FREEFORM_ONLY"
-        desc: "SR2026: avoid fully unstructured postal address; prefer structured/hybrid with at least Town + Country"
-        type: "guidance"
-        severity: "WARN"
-        message: "If you currently send only free-form postal address lines, update to structured/hybrid address. Minimum: structured Town Name + Country."
-
       - id: "SR2026_CHRGBR_RECHECK"
         desc: "SR2026: ensure ChargeBearer follows CBPR+ allowed values"
         type: "in_set"
